@@ -1,6 +1,6 @@
 # Creating_Isochrones_with_Python_Scipt_in_QGIS.py
 
-## Creates individual isochrones with v.net.iso tool
+## Creates individual isochrones with v.net.iso in GRASS
 when we use v.net.iso tool to create isochrones, we face four issues.
   1. v.net.iso does not create isochrones from individual points.
   2. The output is the whole network layer. We should filter isochrones by attribute 'cat' values
