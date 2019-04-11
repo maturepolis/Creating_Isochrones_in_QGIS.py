@@ -11,6 +11,6 @@ The python script can solve these problems and save the results.
 Every step is processed in PyQGIS automatically.
 
 ## Usage
-The script works in Python console in QGIS and needs upto QGIS version 3.
-The algorithm uses GRASS 7 module (Geographic Resources Analysis Support System).
+The script works in Python console in QGIS and needs upto QGIS version 3 and python version 3.\
+The algorithm uses GRASS 7 module (Geographic Resources Analysis Support System).\
 If GRASS is not installed in QGIS, install it in QGIS plugins.
