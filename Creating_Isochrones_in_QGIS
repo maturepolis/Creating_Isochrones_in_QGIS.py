@@ -1,0 +1,151 @@
+print('---------------------')
+## importing library
+import processing
+
+## Loading source layers
+node_path = 'Starting points layer'
+line_path = 'Network layer'
+node_project = iface.addVectorLayer(node_path, "nodes", "ogr")
+line_project = iface.addVectorLayer(line_path, "roads", "ogr")
+
+## Calling source layers
+node_layer = QgsProject.instance().mapLayersByName('nodes')[0]
+line_layer = QgsProject.instance().mapLayersByName('roads')[0]
+
+## Extracting field names and types from POI points
+node_field_names = [field.name() for field in node_layer.fields()]
+node_first_feature_selection = node_layer.selectByIds([0])
+node_first_feature = node_layer.selectedFeatures()[0]
+node_value = node_first_feature.attributes()
+#node_type = [str(type(value)) for value in node_value]
+node_field_types = []
+for type in node_type:
+    if type == "<class 'int'>":
+        node_field_types.append(0)
+    elif type == "<class 'float'>":
+        node_field_types.append(1)
+    elif type == "<class 'str'>":
+        node_field_types.append(2)
+    else:
+        node_field_types.append(2)
+field_length = len(node_field_types)
+
+## Calling algorithm parameters of v.net.iso
+alg = 'grass7:v.net.iso'
+
+input = line_path
+points = 'Set a path of temporary point layer for isochrones'
+threshold = 10
+arc_type = '0, 1'
+center_cats = '1-100000'
+costs = '750'
+arc_column = 'LEN'
+arc_backward_column = 'LEN'
+node_column = None
+g = None
+output = 'Network_Iso'
+extent = None
+snap = -1
+min_area = 0.000100
+output_type = 0
+dsco = None
+ico = None
+
+## Setting initial file number
+num = 1
+
+## starting creating isochrones
+
+## Calling POI point one by one
+for feat in node_layer.getFeatures():
+    ## Extracting field values of POI point
+    value_list = feat.attributes()
+    ## Extracting feature id
+    id = feat.id()
+    ## Saving feature as temporary layer
+    temporary_path = 'Set a path of temporary point layer for isochrones, same to points variable'
+    temporary_node = node_layer.selectByIds([id])
+    temporary_layer = node_layer.selectedFeatures()
+    temporary_writer = QgsVectorFileWriter.writeAsVectorFormat(node_layer, temporary_path, "UTF-8", node_layer.crs(), "ESRI Shapefile", True)
+    ## Strating running v.net.iso and saving the result
+    output_name = 'Set a path of output of v.net.iso tool' + str(num) + '.shp'
+
+    ret = processing.run(alg, {"input": input,\
+                               "points": temporary_path,\
+                               "threshold": threshold,\
+                               "arc_type": arc_type,\
+                               "center_cats": center_cats,\
+                               "costs": costs,\
+                               "arc_column": arc_column,\
+                               "arc_backward_column": arc_backward_column,\
+                               "node_column": node_column,\
+                               "-g": g,\
+                               "output": output,\
+                               "GRASS_REGION_PARAMETER": extent,\
+                               "GRASS_SNAP_TOLERANCE_PARAMETER": snap,\
+                               "GRASS_MIN_AREA_PARAMETER": min_area,\
+                               "GRASS_OUTPUT_TYPE_PARAMETER": output_type,\
+                               "GRASS_VECTOR_DSCO": dsco,\
+                               "GRASS_VECTOR_LCO": ico,\
+                               "output": output_name})
+
+    ## Calling the output of v.net.iso
+    original_path = ret["output"]
+    original_layer = iface.addVectorLayer(original_path, "original" + str(num), "ogr")
+    original_iso = QgsProject.instance().mapLayersByName('original' + str(num))[0]
+
+    ## Starting filtering isochroned
+
+    ## Calling the original output of v.net.iso and saving as a new layer
+    filtered_path = 'Set a path of a layer for filtering' +str(num) + '.shp'
+    filtered_writer = QgsVectorFileWriter.writeAsVectorFormat(original_iso,\
+    filtered_path, "UTF-8", line_layer.crs(),"ESRI Shapefile")
+
+    ## Filtering isochrones
+    filtered_layer = iface.addVectorLayer(filtered_path, "filtered" + str(num), "ogr")
+    filtered_layer.startEditing()
+    req = filtered_layer.selectByExpression('"cat"=2')
+    Feat = filtered_layer.selectedFeatures()
+    IDlist = [feat.id() for feat in Feat]
+    filtered_layer.dataProvider().deleteFeatures(IDlist)
+    filtered_layer.commitChanges()
+
+    ## Starting merging isochrones lines with dissolve tool
+    merged_path = 'Set a path of a layer for merging' + str(num) + '.shp'
+    processing.run('qgis:dissolve', {"INPUT": filtered_layer, "FIELD": None, "OUTPUT": merged_path})
+
+    ## Strating Adding field data from a POI point
+
+    ## Calling merged isochrone layer
+    merged_layer = iface.addVectorLayer(merged_path, 'merged' + str(num), 'ogr')
+    merged_layer.startEditing()
+    ## Adding first field data (field name, field type, field value)
+    ret2 = processing.run('qgis:addfieldtoattributestable', {"INPUT": merged_layer, "FIELD_NAME": node_field_names[0], \
+                                                             "FIELD_TYPE": node_field_types[0], "FIELD_LENGTH": 10, "FIELD_PRECISION": 0, \
+                                                             "OUTPUT": "memory:'first_field_output'"})
+    ret2_output = ret2["OUTPUT"]
+    ret2_output.startEditing()
+    ret2_output.changeAttributeValue(1, 1, value_list[0])
+    ret2_output.commitChanges()
+    ## Adding rest field data
+    for i in range(1, field_length):
+        ret2 = processing.run('qgis:addfieldtoattributestable', {"INPUT": ret2_output, "FIELD_NAME": node_field_names[i],
+                                                                 "FIELD_TYPE": node_field_types[i], "FIELD_LENGTH": 10, "FIELD_PRECISION": 0, \
+                                                                 "OUTPUT": "memory:'field_output'"})
+        ret2_output = ret2["OUTPUT"]
+        ret2_output.startEditing()
+        ret2_output.changeAttributeValue(1, i+1, value_list[i])
+        ret2_output.commitChanges()
+
+    ## Saving final output layer
+    final_path = 'Set a path of a layer for final output' + str(num) + '.shp'
+    final_writer = QgsVectorFileWriter.writeAsVectorFormat(ret2_output, final_path, "UTF-8", line_layer.crs(),"ESRI Shapefile")
+
+    ## Removing layers on projection map
+    QgsProject.instance().removeMapLayer(original_layer.id())
+    QgsProject.instance().removeMapLayer(filtered_layer.id())
+    QgsProject.instance().removeMapLayer(merged_layer.id())
+
+    ## Printing processing finish and adding 1 to file number
+    print('#'+str(num)+' Done')
+    num += 1
