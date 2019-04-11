@@ -1,4 +1,4 @@
-# Creating_Isochrones_with_python_scipt_in_QGIS.py
+# Creating_Isochrones_with_Python_Scipt_in_QGIS.py
 
 ## Creates individual isochrones with v.net.iso tool
 when we use v.net.iso tool to create isochrones, we face four issues.
