@@ -18,7 +18,7 @@ node_field_names = [field.name() for field in node_layer.fields()]
 node_first_feature_selection = node_layer.selectByIds([0])
 node_first_feature = node_layer.selectedFeatures()[0]
 node_value = node_first_feature.attributes()
-#node_type = [str(type(value)) for value in node_value]
+node_type = [str(type(value)) for value in node_value]
 node_field_types = []
 for type in node_type:
     if type == "<class 'int'>":
