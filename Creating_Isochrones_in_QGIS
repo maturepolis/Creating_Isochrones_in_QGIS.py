@@ -59,15 +59,19 @@ num = 1
 
 ## Calling POI point one by one
 for feat in node_layer.getFeatures():
+
     ## Extracting field values of POI point
     value_list = feat.attributes()
+    
     ## Extracting feature id
     id = feat.id()
+    
     ## Saving feature as temporary layer
     temporary_path = 'Set a path of temporary point layer for isochrones, same to points variable'
     temporary_node = node_layer.selectByIds([id])
     temporary_layer = node_layer.selectedFeatures()
     temporary_writer = QgsVectorFileWriter.writeAsVectorFormat(node_layer, temporary_path, "UTF-8", node_layer.crs(), "ESRI Shapefile", True)
+    
     ## Strating running v.net.iso and saving the result
     output_name = 'Set a path of output of v.net.iso tool' + str(num) + '.shp'
 
@@ -120,6 +124,7 @@ for feat in node_layer.getFeatures():
     ## Calling merged isochrone layer
     merged_layer = iface.addVectorLayer(merged_path, 'merged' + str(num), 'ogr')
     merged_layer.startEditing()
+    
     ## Adding first field data (field name, field type, field value)
     ret2 = processing.run('qgis:addfieldtoattributestable', {"INPUT": merged_layer, "FIELD_NAME": node_field_names[0], \
                                                              "FIELD_TYPE": node_field_types[0], "FIELD_LENGTH": 10, "FIELD_PRECISION": 0, \
@@ -128,6 +133,7 @@ for feat in node_layer.getFeatures():
     ret2_output.startEditing()
     ret2_output.changeAttributeValue(1, 1, value_list[0])
     ret2_output.commitChanges()
+    
     ## Adding rest field data
     for i in range(1, field_length):
         ret2 = processing.run('qgis:addfieldtoattributestable', {"INPUT": ret2_output, "FIELD_NAME": node_field_names[i],
@@ -142,7 +148,7 @@ for feat in node_layer.getFeatures():
     final_path = 'Set a path of a layer for final output' + str(num) + '.shp'
     final_writer = QgsVectorFileWriter.writeAsVectorFormat(ret2_output, final_path, "UTF-8", line_layer.crs(),"ESRI Shapefile")
 
-    ## Removing layers on projection map
+    ## Removing layers on the projection map
     QgsProject.instance().removeMapLayer(original_layer.id())
     QgsProject.instance().removeMapLayer(filtered_layer.id())
     QgsProject.instance().removeMapLayer(merged_layer.id())
@@ -151,6 +157,8 @@ for feat in node_layer.getFeatures():
     print('#'+str(num)+' Done')
     num += 1
 
+## Removing source layers on the projection map
 QgsProject.instance().removeMapLayer(node_layer.id())
 QgsProject.instance().removeMapLayer(line_layer.id())
+
 print('Finish!')
