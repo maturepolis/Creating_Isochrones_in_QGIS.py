@@ -13,7 +13,7 @@ The process follows these steps.
   2. Copy Field names and values from the point layer.
   3. Call a feature of point layer one by one and run v.net.iso.
   4. Remove unnecessary features of output and merge them to one feature.
-  5. Paste the field information to the isochrone feature.\
+  5. Paste the field information to the isochrone feature.
 
 Every step is processed in PyQGIS automatically.\
 The algorithm saves all the output of the process.
