@@ -1,4 +1,5 @@
-print('---------------------')
+print('Start!')
+
 ## importing library
 import processing
 
@@ -149,3 +150,5 @@ for feat in node_layer.getFeatures():
     ## Printing processing finish and adding 1 to file number
     print('#'+str(num)+' Done')
     num += 1
+
+print('Finish!')
