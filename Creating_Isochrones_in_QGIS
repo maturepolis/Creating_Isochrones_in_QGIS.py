@@ -151,4 +151,6 @@ for feat in node_layer.getFeatures():
     print('#'+str(num)+' Done')
     num += 1
 
+QgsProject.instance().removeMapLayer(node_layer.id())
+QgsProject.instance().removeMapLayer(line_layer.id())
 print('Finish!')
